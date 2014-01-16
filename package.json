@@ -1,0 +1,26 @@
+{
+  "name": "object-walker",
+  "version": "0.0.1",
+  "description": "Walk Objects like an Acrobat",
+  "main": "objectWalker.js",
+  "dependencies": {
+    "underscore": "~1.5.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "jasmine-node spec/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adriaan-pelzer/object-walker"
+  },
+  "keywords": [
+    "object",
+    "walker"
+  ],
+  "author": "Adriaan Pelzer",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/adriaan-pelzer/object-walker/issues"
+  }
+}
