@@ -26,12 +26,23 @@ A functional object walker node module, with user-settable handlers for each of 
 ```js
     var walker = require ( 'object-walker' );
 
+    var inputObject = {
+        a: null,
+        b: 123,
+        c: {
+            a: 'hello world',
+            b: undefined
+        }
+    };
+
     /* Using your own iterator: */
 
-    walker.walkObject ( { a: null, b: 123, c: { a: 'hello world', b: undefined } }, function ( keys, value ) {
+    walker.walkObject ( inputObject, function ( keys, value ) {
 
-        /* keys is an array, representing the tree-of-keys, from root to where you are now */
-        /* value is the value of the node on which you are now */
+        /* 'keys' is an array, representing the tree-of-keys,
+         * from root to where you are now
+         * 'value' is the value of the node on which you are now
+         */
 
         walker.walkObject ( value, iterator, keys );
     } );
@@ -45,11 +56,14 @@ A functional object walker node module, with user-settable handlers for each of 
     walker.setCustomHandler ( 'Object', function ( keys, value ) {
         console.log ( keys[keys.length - 1] + ' is an object' );
 
-        /* Returning false in the handler of an iterable will stop it from being decended into */
+        /* Returning false in the handler of an iterable
+         * will stop it from being descended into 
+         */
+
         return false;
     } );
 
-    walker.walkObject ( { a: null, b: 123, c: { a: 'hello world', b: undefined } }, walker.iterator );
+    walker.walkObject ( inputObject, walker.iterator );
 
     /* Outputs:
      * a is null
