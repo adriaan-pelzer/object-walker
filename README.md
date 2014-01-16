@@ -17,10 +17,13 @@ A functional object walker node module, with user-settable handlers for each of 
 
 **Install like this:**
 
+```js
     npm install object-walker
+```
 
 **Use like this:**
 
+```js
     var walker = require ( 'object-walker' );
 
     /* Using your own iterator: */
@@ -52,3 +55,4 @@ A functional object walker node module, with user-settable handlers for each of 
      * a is null
      * c is an object
      */
+```
