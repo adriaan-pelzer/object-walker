@@ -26,7 +26,7 @@ var isIterable = function ( object ) {
     return ( _.isObject ( object ) && ! _.isFunction ( object ) );
 };
 
-var walkObject = function ( object, iterator, keys ) {
+var walkObject = function ( object, iterator, keys, userCtx ) {
     var key;
 
     if ( _.isUndefined ( keys ) ) {
@@ -37,50 +37,56 @@ var walkObject = function ( object, iterator, keys ) {
         for ( key in object ) {
             if ( object.hasOwnProperty ( key ) ) {
                 if ( _.isFunction ( iterator ) ) {
-                    iterator ( keys.concat ( [ key ] ), object[key] );
+                    iterator ( keys.concat ( [ key ] ), object[key], userCtx );
                 }
             }
         }
     }
+
+    return userCtx;
 };
 
 var handle = function ( type ) {
-    return function ( keys, value ) {
+    return function ( keys, value, userCtx ) {
         log ( keys, value, type );
 
-        if ( getCustomHandler ( type ) ( keys, value ) ) {
-            walkObject ( value, iterator, keys );
+        if ( getCustomHandler ( type ) ( keys, value, userCtx ) ) {
+            walkObject ( value, iterator, keys, userCtx );
         }
     };
 };
 
-var iterator = function ( keys, value ) {
+var iterator = function ( keys, value, userCtx ) {
+    var handler;
+
     switch ( true ) {
         case _.isDate ( value ):
-            handle ( 'Date' ) ( keys, value );
+            handler = handle ( 'Date' );
             break;
         case _.isArray ( value ):
-            handle ( 'Array' ) ( keys, value );
+            handler = handle ( 'Array' );
             break;
         case _.isObject ( value ):
-            handle ( 'Object' ) ( keys, value );
+            handler = handle ( 'Object' );
             break;
         case _.isNumber ( value ):
-            handle ( 'Number' ) ( keys, value );
+            handler = handle ( 'Number' );
             break;
         case _.isBoolean ( value ):
-            handle ( 'Boolean' ) ( keys, value );
+            handler = handle ( 'Boolean' );
             break;
         case _.isString ( value ):
-            handle ( 'String' ) ( keys, value );
+            handler = handle ( 'String' );
             break;
         case _.isNull ( value ):
-            handle ( 'Null' ) ( keys, value );
+            handler = handle ( 'Null' );
             break;
         case _.isUndefined ( value ):
-            handle ( 'Undefined' ) ( keys, value );
+            handler = handle ( 'Undefined' );
             break;
     }
+
+    handler ( keys, value, userCtx );
 };
 
 exports.walkObject = walkObject;

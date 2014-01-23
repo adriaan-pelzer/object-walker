@@ -1,6 +1,6 @@
 describe ( 'walker', function () {
     var _ = require ( 'underscore' );
-    var inspect = require ( 'eyes' ).inspector ();
+    var inspect = require ( 'eyes' ).inspector ( { maxLength: 0 } );
     var walker = require ( __dirname + '/../objectWalker.js' );
     var objectWithAllTypes = require ( __dirname + '/testData.js' ).objectWithAllTypes;
 
@@ -81,14 +81,14 @@ describe ( 'walker', function () {
         it ( 'should walk the entire object with the built-in iterator, and call all the value type handlers with an array, and a value of the right type', function () {
             walker.walkObject ( objectWithAllTypes (), walker.iterator );
 
-            expect ( arrayHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Array ) );
-            expect ( objectHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Object ) );
-            expect ( stringHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( String ) );
-            expect ( booleanHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), true );
-            expect ( numberHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Number ) );
-            expect ( dateHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Date ) );
-            expect ( nullHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), null );
-            expect ( undefinedHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), undefined );
+            expect ( arrayHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Array ), undefined );
+            expect ( objectHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Object ), undefined );
+            expect ( stringHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( String ), undefined );
+            expect ( booleanHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), true, undefined );
+            expect ( numberHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Number ), undefined );
+            expect ( dateHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Date ), undefined );
+            expect ( nullHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), null, undefined );
+            expect ( undefinedHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), undefined, undefined );
         } );
     } );
 
@@ -131,6 +131,35 @@ describe ( 'walker', function () {
             var input = objectWithAllTypes ();
 
             walker.walkObject ( input, walker.iterator );
+        } );
+    } );
+
+    describe ( 'customHandlers: user context', function () {
+        beforeEach ( function () {
+            var setNonIterableHandler = function ( type ) {
+                walker.setCustomHandler ( type, function ( keys, value, userCtx ) {
+                    userCtx.push ( value );
+
+                    return true;
+                } );
+            };
+
+            setNonIterableHandler ( 'String' );
+            setNonIterableHandler ( 'Boolean' );
+            setNonIterableHandler ( 'Number' );
+            setNonIterableHandler ( 'Date' );
+            setNonIterableHandler ( 'Null' );
+            setNonIterableHandler ( 'Undefined' );
+        } );
+
+        it ( 'should populate the user context with an array of all the non-iterable nodes in the tree', function () {
+            var input = objectWithAllTypes ();
+            var expectedOutput = [ 'test string', 12345, 3.124, true, 'test string', 12345, 3.124, true, 'test string', 12345, 3.124, true, 'test string', 12345, 3.124, true, 'test string', 12345, 3.124, true, null, undefined, 'test string', 12345, 3.124, true, 'test string', 12345, 3.124, true, 'test string', 12345, 3.124, true, 'test string', 12345, 3.124, true, null, undefined, null, undefined, new Date ( '2011-11-11 11:11:11' ) ];
+            var output = [];
+
+            walker.walkObject ( input, walker.iterator, undefined, output );
+
+            expect ( output ).toEqual ( expectedOutput );
         } );
     } );
 } );

@@ -4,7 +4,8 @@
   "description": "Walk Objects like an Acrobat",
   "main": "objectWalker.js",
   "dependencies": {
-    "underscore": "~1.5.2"
+    "underscore": "~1.5.2",
+    "eyes": "~0.1.8"
   },
   "devDependencies": {},
   "scripts": {
