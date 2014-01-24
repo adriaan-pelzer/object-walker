@@ -1,12 +1,5 @@
 var _ = require ( 'underscore' );
-
-var debug = false;
-
-var log = function ( keys, value, extra ) {
-    if ( debug ) {
-        console.log ( keys[keys.length - 1] + ': ' + value + ' (' + extra + ')' );
-    }
-};
+var log = require ( __dirname + '/functionLogger.js' );
 
 var customHandlers = {};
 
@@ -15,11 +8,15 @@ var getCustomHandler = function ( type ) {
         return customHandlers[type]; 
     }
 
-    return function () { return true; };
+    return function ( keys, value, userCtx ) { return userCtx; };
 };
 
 var setCustomHandler = function ( type, handler ) {
     customHandlers[type] = handler; 
+};
+
+var clearCustomHandlers = function () {
+    customHandlers = {};
 };
 
 var isIterable = function ( object ) {
@@ -27,7 +24,9 @@ var isIterable = function ( object ) {
 };
 
 var walkObject = function ( object, iterator, keys, userCtx ) {
-    var key;
+    var key, returnedCtx = userCtx;
+
+    log.logFunction ( 'walkObject', arguments );
 
     if ( _.isUndefined ( keys ) ) {
         keys = [];
@@ -37,58 +36,77 @@ var walkObject = function ( object, iterator, keys, userCtx ) {
         for ( key in object ) {
             if ( object.hasOwnProperty ( key ) ) {
                 if ( _.isFunction ( iterator ) ) {
-                    iterator ( keys.concat ( [ key ] ), object[key], userCtx );
+                    returnedCtx = iterator ( keys.concat ( [ key ] ), object[key], returnedCtx );
                 }
             }
         }
     }
 
-    return userCtx;
+    log.logReturn ( 'walkObject', returnedCtx );
+
+    return returnedCtx;
 };
 
 var handle = function ( type ) {
     return function ( keys, value, userCtx ) {
-        log ( keys, value, type );
+        var ret, passedCtx;
 
-        if ( getCustomHandler ( type ) ( keys, value, userCtx ) ) {
-            walkObject ( value, iterator, keys, userCtx );
-        }
+        log.logFunction ( 'handler', arguments );
+
+        _.isFunction ( customHandlers[type] ) && log.logFunction ( 'customHandler', [ keys, value, userCtx ] );
+
+        passedCtx = getCustomHandler ( type ) ( keys, value, userCtx );
+
+        _.isFunction ( customHandlers[type] ) && log.logReturn ( 'customHandler', passedCtx );
+
+        ret = walkObject ( value, iterator, keys, passedCtx );
+
+        log.logReturn ( 'handler', ret );
+
+        return ret;
     };
 };
 
 var iterator = function ( keys, value, userCtx ) {
-    var handler;
+    var type, ret;
+
+    log.logFunction ( 'iterator', arguments );
 
     switch ( true ) {
         case _.isDate ( value ):
-            handler = handle ( 'Date' );
+            type = 'Date';
             break;
         case _.isArray ( value ):
-            handler = handle ( 'Array' );
+            type = 'Array';
             break;
         case _.isObject ( value ):
-            handler = handle ( 'Object' );
+            type = 'Object';
             break;
         case _.isNumber ( value ):
-            handler = handle ( 'Number' );
+            type = 'Number';
             break;
         case _.isBoolean ( value ):
-            handler = handle ( 'Boolean' );
+            type = 'Boolean';
             break;
         case _.isString ( value ):
-            handler = handle ( 'String' );
+            type = 'String';
             break;
         case _.isNull ( value ):
-            handler = handle ( 'Null' );
+            type = 'Null';
             break;
         case _.isUndefined ( value ):
-            handler = handle ( 'Undefined' );
+            type = 'Undefined';
             break;
     }
 
-    handler ( keys, value, userCtx );
+    ret = handle ( type ) ( keys, value, userCtx );
+
+    log.logReturn ( 'walkObject', ret );
+
+    return ret;
 };
 
 exports.walkObject = walkObject;
 exports.iterator = iterator;
 exports.setCustomHandler = setCustomHandler;
+exports.clearCustomHandlers = clearCustomHandlers;

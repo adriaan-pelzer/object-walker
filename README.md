@@ -55,12 +55,6 @@ walker.setCustomHandler ( 'Null', function ( keys, value ) {
 
 walker.setCustomHandler ( 'Object', function ( keys, value ) {
     console.log ( keys[keys.length - 1] + ' is an object' );
-
-    /* Returning false in the handler of an iterable
-     * will stop it from being descended into 
-     */
-
-    return false;
 } );
 
 walker.walkObject ( inputObject, walker.iterator );
@@ -69,4 +63,33 @@ walker.walkObject ( inputObject, walker.iterator );
  * a is null
  * c is an object
  */
+
+/* To reuse walker, call clearCustomHandlers, to clean up after
+ * your previous walk.
+ */
+
+walker.clearCustomHandlers ();
+
+ /* Using the built-in iterator, with custom handlers, and
+  * populating a user context that gets passed along the
+  * entire walk.
+  */
+
+walker.setCustomHandler ( 'Null', function ( keys, value, userCtx ) {
+    var returnedCtx = userCtx;
+
+    returnedCtx.push ( value );
+
+    return returnedCtx;
+} );
+
+walker.setCustomHandler ( 'Object', function ( keys, value, userCtx ) {
+    var returnedCtx = userCtx;
+
+    returnedCtx.push ( value );
+
+    return returnedCtx;
+} );
+
+userCtx = walker.walkObject ( inputObject, walker.iterator, [] );
 ```

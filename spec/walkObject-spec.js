@@ -1,8 +1,8 @@
 describe ( 'walker', function () {
     var _ = require ( 'underscore' );
     var inspect = require ( 'eyes' ).inspector ( { maxLength: 0 } );
-    var walker = require ( __dirname + '/../objectWalker.js' );
     var objectWithAllTypes = require ( __dirname + '/testData.js' ).objectWithAllTypes;
+    var walker = require ( __dirname + '/../objectWalker.js' );
 
     var isIterable = function ( item ) {
         return ( _.isArray ( item ) || _.isObject ( item ) );
@@ -33,6 +33,8 @@ describe ( 'walker', function () {
     } );
 
     describe ( 'iterator', function () {
+        var walker = require ( __dirname + '/../objectWalker.js' );
+
         it ( 'should walk the entire object with the built-in iterator', function () {
             spyOn ( walker, 'iterator' ).andCallThrough ();
 
@@ -55,14 +57,18 @@ describe ( 'walker', function () {
             nullHandler = jasmine.createSpy ( 'nullHandler' );
             undefinedHandler = jasmine.createSpy ( 'undefinedHandler' );
 
-            walker.setCustomHandler ( 'Array', arrayHandler.andReturn ( true ) );
-            walker.setCustomHandler ( 'Object', objectHandler.andReturn ( true ) );
-            walker.setCustomHandler ( 'String', stringHandler.andReturn ( true ) );
-            walker.setCustomHandler ( 'Boolean', booleanHandler.andReturn ( true ) );
-            walker.setCustomHandler ( 'Number', numberHandler.andReturn ( true ) );
-            walker.setCustomHandler ( 'Date', dateHandler.andReturn ( true ) );
-            walker.setCustomHandler ( 'Null', nullHandler.andReturn ( true ) );
-            walker.setCustomHandler ( 'Undefined', undefinedHandler.andReturn ( true ) );
+            walker.setCustomHandler ( 'Array', arrayHandler.andReturn ( 42 ) );
+            walker.setCustomHandler ( 'Object', objectHandler.andReturn ( 42 ) );
+            walker.setCustomHandler ( 'String', stringHandler.andReturn ( 42 ) );
+            walker.setCustomHandler ( 'Boolean', booleanHandler.andReturn ( 42 ) );
+            walker.setCustomHandler ( 'Number', numberHandler.andReturn ( 42 ) );
+            walker.setCustomHandler ( 'Date', dateHandler.andReturn ( 42 ) );
+            walker.setCustomHandler ( 'Null', nullHandler.andReturn ( 42 ) );
+            walker.setCustomHandler ( 'Undefined', undefinedHandler.andReturn ( 42 ) );
+        } );
+
+        afterEach ( function () {
+            walker.clearCustomHandlers ();
         } );
 
         it ( 'should walk the entire object with the built-in iterator, and call all the value type handlers', function () {
@@ -81,14 +87,14 @@ describe ( 'walker', function () {
         it ( 'should walk the entire object with the built-in iterator, and call all the value type handlers with an array, and a value of the right type', function () {
             walker.walkObject ( objectWithAllTypes (), walker.iterator );
 
-            expect ( arrayHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Array ), undefined );
-            expect ( objectHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Object ), undefined );
-            expect ( stringHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( String ), undefined );
-            expect ( booleanHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), true, undefined );
-            expect ( numberHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Number ), undefined );
-            expect ( dateHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Date ), undefined );
-            expect ( nullHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), null, undefined );
-            expect ( undefinedHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), undefined, undefined );
+            expect ( arrayHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Array ), 42 );
+            expect ( objectHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Object ), 42 );
+            expect ( stringHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( String ), 42 );
+            expect ( booleanHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), true, 42 );
+            expect ( numberHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Number ), 42 );
+            expect ( dateHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), jasmine.any ( Date ), 42 );
+            expect ( nullHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), null, 42 );
+            expect ( undefinedHandler ).toHaveBeenCalledWith ( jasmine.any ( Array ), undefined, 42 );
         } );
     } );
 
@@ -127,6 +133,10 @@ describe ( 'walker', function () {
             setHandler ( walker, 'Undefined' );
         } );
 
+        afterEach ( function () {
+            walker.clearCustomHandlers ();
+        } );
+
         it ( 'should walk the entire object with the built-in iterator, and call all the value type handlers with the list of keys and node value', function () {
             var input = objectWithAllTypes ();
 
@@ -138,9 +148,15 @@ describe ( 'walker', function () {
         beforeEach ( function () {
             var setNonIterableHandler = function ( type ) {
                 walker.setCustomHandler ( type, function ( keys, value, userCtx ) {
-                    userCtx.push ( value );
+                    var returnedCtx = userCtx;
 
-                    return true;
+                    if ( _.isUndefined ( returnedCtx ) ) {
+                        returnedCtx = [];
+                    }
+
+                    returnedCtx.push ( value );
+
+                    return returnedCtx;
                 } );
             };
 
@@ -150,6 +166,10 @@ describe ( 'walker', function () {
             setNonIterableHandler ( 'Date' );
             setNonIterableHandler ( 'Null' );
             setNonIterableHandler ( 'Undefined' );
+        } );
+
+        afterEach ( function () {
+            walker.clearCustomHandlers ();
         } );
 
         it ( 'should populate the user context with an array of all the non-iterable nodes in the tree', function () {
