@@ -1,6 +1,6 @@
 {
   "name": "object-walker",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Walk Objects like an Acrobat",
   "main": "objectWalker.js",
   "dependencies": {
