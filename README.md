@@ -92,4 +92,8 @@ walker.setCustomHandler ( 'Object', function ( keys, value, userCtx ) {
 } );
 
 userCtx = walker.walkObject ( inputObject, walker.iterator, [] );
+
+/*
+ * userCtx is: [ null, { a: 'hello world', b: undefined } ]
+ */
 ```
